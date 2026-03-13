@@ -1194,3 +1194,5 @@ class APIVersion(StrEnum):
     V1 = "v1"
     V1BETA = "v1beta"
     V1ALPHA = "v1alpha"
+    V1BETA_UPLOAD = "upload/v1beta"
+    V1ALPHA_UPLOAD = "upload/v1alpha"

@@ -28,6 +28,7 @@ from secops.chronicle.utils.request_utils import (
     chronicle_request,
     chronicle_request_bytes,
     chronicle_paginated_request,
+    chronicle_multipart_upload
 )
 from secops.exceptions import APIError
 
@@ -834,3 +835,285 @@ def test_chronicle_request_bytes_non_json_error_body_is_truncated(client: Mock) 
     msg = str(exc_info.value)
     assert "status=500" in msg
     assert "truncated" in msg
+
+
+# ---------------------------------------------------------------------------
+# chronicle_multipart_upload() tests
+# ---------------------------------------------------------------------------
+
+def test_chronicle_multipart_upload_success_returns_json(client: Mock) -> None:
+    # Test successful multipart upload returns parsed JSON
+    response = _mock_response(
+        status_code=200,
+        json_value={"workflowIdentifiers": ["wf-1", "wf-2"]},
+    )
+    client.session.request.return_value = response
+
+    out = chronicle_multipart_upload(
+        client=client,
+        endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+        file_data=b"PK\x03\x04fake-zip",
+        api_version=APIVersion.V1ALPHA_UPLOAD,
+    )
+
+    assert out == {"workflowIdentifiers": ["wf-1", "wf-2"]}
+
+    client.base_url.assert_called_once_with(APIVersion.V1ALPHA_UPLOAD)
+    _, kwargs = client.session.request.call_args
+    assert kwargs["method"] == "POST"
+    assert kwargs["url"] == (
+        "https://example.test/chronicle/instances/instance-1/"
+        "legacyPlaybooks:legacyImportDefinitions"
+    )
+    assert "files" in kwargs
+    filename, data, content_type = kwargs["files"]["file"]
+    assert data == b"PK\x03\x04fake-zip"
+    assert content_type == "application/zip"
+
+
+def test_chronicle_multipart_upload_passes_params(client: Mock) -> None:
+    # Test that query params are forwarded to the request
+    response = _mock_response(
+        status_code=200, json_value={"workflowIdentifiers": []}
+    )
+    client.session.request.return_value = response
+
+    chronicle_multipart_upload(
+        client=client,
+        endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+        file_data=b"zip",
+        api_version=APIVersion.V1ALPHA_UPLOAD,
+        params={"overwrite": "true"},
+    )
+
+    _, kwargs = client.session.request.call_args
+    assert kwargs["params"] == {"overwrite": "true"}
+
+
+def test_chronicle_multipart_upload_custom_content_type(client: Mock) -> None:
+    # Test that a custom file content type is forwarded correctly
+    response = _mock_response(status_code=200, json_value={"ok": True})
+    client.session.request.return_value = response
+
+    chronicle_multipart_upload(
+        client=client,
+        endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+        file_data=b"data",
+        file_content_type="application/octet-stream",
+        api_version=APIVersion.V1ALPHA_UPLOAD,
+    )
+
+    _, kwargs = client.session.request.call_args
+    _, _, content_type = kwargs["files"]["file"]
+    assert content_type == "application/octet-stream"
+
+
+def test_chronicle_multipart_upload_status_mismatch_with_json_raises(
+    client: Mock,
+) -> None:
+    # Test that a non-expected status with a JSON body raises APIError
+    response = _mock_response(
+        status_code=400, json_value={"error": "bad request"}
+    )
+    client.session.request.return_value = response
+
+    with pytest.raises(
+        APIError,
+        match=(
+            r"API request failed: method=POST, "
+            r"url=https://example\.test/chronicle/instances/instance-1/"
+            r"legacyPlaybooks:legacyImportDefinitions, "
+            r"status=400, response={'error': 'bad request'}"
+        ),
+    ):
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+
+def test_chronicle_multipart_upload_status_mismatch_non_json_includes_text(
+    client: Mock,
+) -> None:
+    # Test that a non-expected status without JSON body raises with text preview
+    response = _mock_response(
+        status_code=500, json_raises=True, text="internal error"
+    )
+    client.session.request.return_value = response
+
+    with pytest.raises(
+        APIError,
+        match=(
+            r"API request failed: method=POST, "
+            r"url=https://example\.test/chronicle/instances/instance-1/"
+            r"legacyPlaybooks:legacyImportDefinitions, "
+            r"status=500, response_text=internal error"
+        ),
+    ):
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+
+def test_chronicle_multipart_upload_custom_error_message_used(
+    client: Mock,
+) -> None:
+    # Test that a custom error message prefix is used on failure
+    response = _mock_response(
+        status_code=404, json_value={"message": "not found"}
+    )
+    client.session.request.return_value = response
+
+    with pytest.raises(
+        APIError,
+        match=(
+            r"Failed to import playbooks: method=POST, "
+            r"url=https://example\.test/chronicle/instances/instance-1/"
+            r"legacyPlaybooks:legacyImportDefinitions, "
+            r"status=404, response={'message': 'not found'}"
+        ),
+    ):
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+            error_message="Failed to import playbooks",
+        )
+
+
+def test_chronicle_multipart_upload_non_json_success_raises(
+    client: Mock,
+) -> None:
+    # Successful status but non-JSON body should raise with content_type/preview
+    response = _mock_response(
+        status_code=200, json_raises=True, text="not json"
+    )
+    response.headers = {"Content-Type": "text/html"}
+    client.session.request.return_value = response
+
+    with pytest.raises(APIError) as exc_info:
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+    msg = str(exc_info.value)
+    assert "Expected JSON response" in msg
+    assert "content_type=text/html" in msg
+    assert "body_preview=not json" in msg
+
+
+def test_chronicle_multipart_upload_non_json_error_body_is_truncated(
+    client: Mock,
+) -> None:
+    # Non-expected status + non-JSON body should truncate long preview
+    long_text = "x" * 5000
+    response = _mock_response(
+        status_code=500, json_raises=True, text=long_text
+    )
+    response.headers = {"Content-Type": "text/plain"}
+    client.session.request.return_value = response
+
+    with pytest.raises(APIError) as exc_info:
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+    msg = str(exc_info.value)
+    assert "status=500" in msg
+    assert "truncated" in msg
+
+
+def test_chronicle_multipart_upload_accepts_multiple_expected_statuses_set(
+    client: Mock,
+) -> None:
+    # Test that a set of expected statuses is accepted
+    response = _mock_response(
+        status_code=201, json_value={"workflowIdentifiers": ["wf-1"]}
+    )
+    client.session.request.return_value = response
+
+    out = chronicle_multipart_upload(
+        client=client,
+        endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+        file_data=b"zip",
+        api_version=APIVersion.V1ALPHA_UPLOAD,
+        expected_status={200, 201},
+    )
+
+    assert out == {"workflowIdentifiers": ["wf-1"]}
+
+
+def test_chronicle_multipart_upload_rejects_status_not_in_expected_set(
+    client: Mock,
+) -> None:
+    # Test that a status not in the expected set raises APIError
+    response = _mock_response(
+        status_code=202, json_value={"message": "accepted"}
+    )
+    client.session.request.return_value = response
+
+    with pytest.raises(APIError, match=r"status=202"):
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+            expected_status={200, 201},
+        )
+
+
+def test_chronicle_multipart_upload_wraps_requests_exception(
+    client: Mock,
+) -> None:
+    # Simulate a network-level failure
+    client.session.request.side_effect = requests.RequestException(
+        "no route to host"
+    )
+
+    with pytest.raises(APIError) as exc_info:
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+    msg = str(exc_info.value)
+    assert "API request failed" in msg
+    assert "method=POST" in msg
+    assert (
+        "url=https://example.test/chronicle/instances/instance-1/"
+        "legacyPlaybooks:legacyImportDefinitions"
+    ) in msg
+    assert "request_error=RequestException" in msg
+
+
+def test_chronicle_multipart_upload_wraps_google_auth_error(
+    client: Mock,
+) -> None:
+    # Simulate an auth failure raised during request
+    client.session.request.side_effect = GoogleAuthError("invalid_grant")
+
+    with pytest.raises(APIError) as exc_info:
+        chronicle_multipart_upload(
+            client=client,
+            endpoint_path="legacyPlaybooks:legacyImportDefinitions",
+            file_data=b"zip",
+            api_version=APIVersion.V1ALPHA_UPLOAD,
+        )
+
+    msg = str(exc_info.value)
+    assert "Google authentication failed" in msg
+    assert "authentication_error=" in msg

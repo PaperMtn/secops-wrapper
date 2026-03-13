@@ -360,3 +360,101 @@ def chronicle_request_bytes(
             ) from None
 
     return response.content
+
+
+def chronicle_multipart_upload(
+    client: "ChronicleClient",
+    endpoint_path: str,
+    file_data: bytes,
+    file_content_type: str = "application/zip",
+    *,
+    api_version: str = APIVersion.V1ALPHA_UPLOAD,
+    params: dict[str, Any] | None = None,
+    expected_status: int | set[int] | tuple[int, ...] | list[int] = 200,
+    error_message: str | None = None,
+    timeout: int | None = None,
+) -> dict[str, Any]:
+    """Perform a multipart media upload request and return JSON.
+
+    Used for endpoints that accept file uploads via the upload URI prefix,
+    such as importing playbook definitions from a ZIP file.
+
+    Args:
+        client: ChronicleClient instance.
+        endpoint_path: URL path after {base_url}/{instance_id}/
+        file_data: Raw bytes of the file to upload.
+        file_content_type: MIME type of the file. Default is application/zip.
+        api_version: The API version to use. Default is V1ALPHA.
+        params: Optional query parameters.
+        expected_status: Expected HTTP status code(s).
+        error_message: Optional base error message to include on failure.
+        timeout: Optional timeout in seconds for the request.
+
+    Returns:
+        Parsed JSON response.
+
+    Raises:
+        APIError: If the request fails or returns a non-JSON body.
+    """
+    base = f"{client.base_url(api_version)}/{client.instance_id}"
+    url = f'{base}/{endpoint_path.lstrip("/")}'
+
+    files = {
+        "file": ("upload.zip", file_data, file_content_type),
+    }
+
+    try:
+        response = client.session.request(
+            method="POST",
+            url=url,
+            params=params,
+            files=files,
+            timeout=timeout,
+        )
+    except GoogleAuthError as exc:
+        base_msg = error_message or "Google authentication failed"
+        raise APIError(f"{base_msg}: authentication_error={exc}") from exc
+    except requests.RequestException as exc:
+        base_msg = error_message or "API request failed"
+        raise APIError(
+            f"{base_msg}: method=POST, url={url}, "
+            f"request_error={exc.__class__.__name__}, detail={exc}"
+        ) from exc
+
+    try:
+        data = response.json()
+    except ValueError:
+        data = None
+
+    if isinstance(expected_status, (set, tuple, list)):
+        status_ok = response.status_code in expected_status
+    else:
+        status_ok = response.status_code == expected_status
+
+    if not status_ok:
+        base_msg = error_message or "API request failed"
+        if data is not None:
+            raise APIError(
+                f"{base_msg}: method=POST, url={url}, "
+                f"status={response.status_code}, response={data}"
+            ) from None
+        preview = _safe_body_preview(
+            getattr(response, "text", ""), limit=MAX_BODY_CHARS
+        )
+        raise APIError(
+            f"{base_msg}: method=POST, url={url}, "
+            f"status={response.status_code}, response_text={preview}"
+        ) from None
+
+    if data is None:
+        content_type = response.headers.get("Content-Type", "unknown")
+        preview = _safe_body_preview(
+            getattr(response, "text", ""), limit=MAX_BODY_CHARS
+        )
+        raise APIError(
+            f"Expected JSON response: method=POST, url={url}, "
+            f"status={response.status_code}, "
+            f"content_type={content_type}, body_preview={preview}"
+        )
+
+    return data
