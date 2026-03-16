@@ -8,7 +8,7 @@ Following shows mapping between SecOps [REST Resource](https://cloud.google.com/
 
 - **v1:** 17 endpoints implemented
 - **v1beta:** 98 endpoints implemented
-- **v1alpha:** 203 endpoints implemented
+- **v1alpha:** 232 endpoints implemented
 
 ## Endpoint Mapping
 
@@ -566,6 +566,35 @@ Following shows mapping between SecOps [REST Resource](https://cloud.google.com/
 | marketplaceIntegrations.install                                                | v1alpha | chronicle.marketplace_integrations.install_marketplace_integration(api_version=APIVersion.V1ALPHA)                           | secops integration marketplace install         |
 | marketplaceIntegrations.list                                                   | v1alpha | chronicle.marketplace_integrations.list_marketplace_integrations(api_version=APIVersion.V1ALPHA)                             | secops integration marketplace list            |
 | marketplaceIntegrations.uninstall                                              | v1alpha | chronicle.marketplace_integrations.uninstall_marketplace_integration(api_version=APIVersion.V1ALPHA)                         | secops integration marketplace uninstall       |
+| legacyPlaybooks.download                                                       | v1alpha | chronicle.playbook.playbooks.export_playbooks                                                |                                                |
+| legacyPlaybooks.exportWorkflowWithBlocksByIdentifier                           | v1alpha | chronicle.playbook.playbooks.import_playbooks                                                |                                                |
+| legacyPlaybooks.legacyGetWorkflowMenuCard                                      | v1alpha | chronicle.playbook.playbooks.get_playbook                                                    |                                                |
+| legacyPlaybooks.legacyGetWorkflowMenuCards                                     | v1alpha | chronicle.playbook.playbooks.list_playbooks                                                  |                                                |
+| legacyPlaybooks.legacySaveWorkflowDefinitions                                  | v1alpha | chronicle.playbook.playbooks.save_playbook                                                   |                                                |
+| legacyPlaybooks.legacyCloneWorkflow                                            | v1alpha | chronicle.playbook.playbooks.clone_playbook                                                  |                                                |
+| legacyPlaybooks.legacyDuplicateWorkflow                                        | v1alpha | chronicle.playbook.playbooks.duplicate_playbook                                              |                                                |
+| legacyPlaybooks.legacyDuplicateWorkflows                                       | v1alpha | chronicle.playbook.playbooks.duplicate_playbooks                                             |                                                |
+| legacyPlaybooks.legacyDeleteWorkflow                                           | v1alpha | chronicle.playbook.playbooks.delete_playbook                                                 |                                                |
+| legacyPlaybooks.legacyDeleteWorkflows                                          | v1alpha | chronicle.playbook.playbooks.delete_playbooks                                                |                                                |
+| legacyPlaybooks.legacyGetWorkflowFullInfoByIdentifier                          | v1alpha | chronicle.playbook.playbooks.get_playbook_full                                               |                                                |
+| legacyPlaybooks.legacyGetWorkflowFullInfoWithEnvFilterByIdentifier             | v1alpha | chronicle.playbook.playbooks.get_playbook_full_by_environment                                |                                                |
+| legacyPlaybooks.legacyGetWorkflowMenuCardWithEnvFilter                         | v1alpha | chronicle.playbook.playbooks.get_playbook_by_environment                                     |                                                |
+| legacyPlaybooks.legacyGetWorkflowMenuCardsWithEnvFilter                        | v1alpha | chronicle.playbook.playbooks.list_playbooks_by_environment                                   |                                                |
+| legacyPlaybooks.LegacyPlaybookApplyApprovalLink                                | v1alpha | chronicle.playbook.playbooks.apply_playbook_approval                                         |                                                |
+| legacyPlaybooks.legacyCheckWorkflowNameInDifferentEnvironments                 | v1alpha | chronicle.playbook.playbooks.check_playbook_name_availability                                |                                                |
+| legacyPlaybooks.legacyGetEnabledWFCards                                        | v1alpha | chronicle.playbook.playbooks.list_enabled_playbooks                                          |                                                |
+| legacyPlaybooks.legacyGetEnabledWFNames                                        | v1alpha | chronicle.playbook.playbooks.list_enabled_playbook_names                                     |                                                |
+| legacyPlaybooks.legacyGetTriggerTags                                           | v1alpha | chronicle.playbook.playbooks.list_playbook_trigger_tags                                      |                                                |
+| legacyPlaybooks.legacyGetPlaybookStatsMap                                      | v1alpha | chronicle.playbook.playbooks.get_playbook_stats                                              |                                                |
+| legacyPlaybooks.legacyGetOverviewTemplate                                      | v1alpha | chronicle.playbook.playbooks.get_overview_template                                           |                                                |
+| legacyPlaybooks.legacyGetOverviewTemplates                                     | v1alpha | chronicle.playbook.playbooks.get_overview_templates                                          |                                                |
+| legacyPlaybooks.legacyGetHtmlViewPresets                                       | v1alpha | chronicle.playbook.playbooks.list_html_view_presets                                         |                                                |
+| legacyPlaybooks.legacyPermissions                                              | v1alpha | chronicle.playbook.playbooks.remove_playbook_permissions                                     |                                                |
+| legacyPlaybooks.legacyPermissionsOptions                                       | v1alpha | chronicle.playbook.playbooks.list_playbook_permission_options                             |                                                |
+| legacyPlaybooks.legacyGetWorkflowsContainsActionAsync                          | v1alpha | chronicle.playbook.playbooks.list_playbooks_containing_action                               |                                                |
+| legacyPlaybooks.legacyGetWorkflowsInvolvingAction                              | v1alpha | chronicle.playbook.playbooks.list_playbooks_involving_actions                                |                                                |
+| legacyPlaybooks.legacyActionWidgetTemplate                                     | v1alpha | chronicle.playbook.playbooks.get_action_widget_template                                     |                                                |
+| legacyPlaybooks.legacyTestPipeExample                                          | v1alpha | chronicle.playbook.playbooks.verify_transformer_example                                     |                                                |
 | nativeDashboards.addChart                                                      | v1alpha | chronicle.dashboard.add_chart                                                                                                | secops dashboard add-chart                     |
 | nativeDashboards.create                                                        | v1alpha | chronicle.dashboard.create_dashboard                                                                                         | secops dashboard create                        |
 | nativeDashboards.delete                                                        | v1alpha | chronicle.dashboard.delete_dashboard                                                                                         | secops dashboard delete                        |

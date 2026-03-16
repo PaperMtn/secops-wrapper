@@ -1,4 +1,4 @@
-from tests.chronicle.test_rule_integration import chronicle
+from tests.chronicle.test_rule_integration import chroniclefrom tests.chronicle.test_rule_integration import chronicle
 
 # Google SecOps SDK for Python
 
@@ -2453,6 +2453,255 @@ default_instance = chronicle.get_default_integration_instance(
 )
 print(f"Default Instance: {default_instance.get('displayName')}")
 print(f"Environment: {default_instance.get('environment')}")
+```
+
+### Playbooks
+
+The SDK provides support for Chronicle legacy playbook operations.
+
+> **Note:** The playbook methods currently support `APIVersion.V1ALPHA` only.
+
+List playbooks:
+
+```python
+from secops.chronicle.models import PlaybookType
+
+# List all regular and nested playbooks
+playbooks = chronicle.list_playbooks()
+for playbook in playbooks.get("payload", []):
+    print(f"Playbook: {playbook.get('name')}")
+
+# Return a direct list instead of the raw response object
+playbooks = chronicle.list_playbooks(
+    playbook_types=[PlaybookType.REGULAR, PlaybookType.NESTED],
+    as_list=True,
+)
+
+# List playbooks filtered by environment access
+playbooks = chronicle.list_playbooks_by_environment(
+    playbook_types=[PlaybookType.REGULAR],
+    as_list=True,
+)
+```
+
+Get playbook metadata and full definitions:
+
+```python
+from secops.chronicle.models import APIVersion
+
+playbook_identifier = "123abc12-ab12-12a3-967e-d712bc99d0e1"
+
+# Get the menu-card style metadata
+playbook = chronicle.get_playbook(
+    playbook_identifier
+)
+
+# Get the full playbook definition
+full_playbook = chronicle.get_playbook_full(
+    playbook_identifier,
+)
+
+# Get the full definition filtered by accessible environments
+full_playbook_env = chronicle.get_playbook_full_by_environment(
+    playbook_identifier,
+)
+
+# Get the menu-card definition filtered by accessible environments
+playbook_env = chronicle.get_playbook_by_environment(
+    playbook_identifier,
+)
+```
+
+Save, clone, and duplicate playbooks:
+
+```python
+
+playbook_definition = chronicle.get_playbook_full(
+    "123abc12-ab12-12a3-967e-d712bc99d0e1",
+)
+
+# Save changes to a playbook
+saved_playbook = chronicle.save_playbook(
+    playbook_definition,
+)
+
+# Clone an existing playbook definition
+cloned_playbook = chronicle.clone_playbook(
+    playbook_definition,
+)
+
+# Duplicate a single playbook
+duplicated_playbook = chronicle.duplicate_playbook(
+    playbook_definition,
+)
+
+# Duplicate multiple playbooks in bulk
+duplicated_playbooks = chronicle.duplicate_playbooks(
+    identifiers=[
+       "123abc12-ab12-12a3-967e-d712bc99d0e1",
+       "456def34-cd34-56e7-89ab-e712cd99d0e2"
+    ],
+    priority=1,
+    category_id=10,
+    environments=["production"],
+)
+```
+
+Import and export playbooks:
+
+```python
+from secops.chronicle.models import APIVersion
+
+# Export one or more playbooks as a ZIP file
+export_bytes = chronicle.export_playbooks(
+    playbook_identifiers=["wf_123", "wf_456"],
+)
+with open("playbooks_export.zip", "wb") as file_obj:
+    file_obj.write(export_bytes) # Write the bytes to a ZIP file
+
+# Import playbooks from a ZIP file
+from pathlib import Path
+
+zip_bytes = Path("path/to/playbooks_export.zip").read_bytes()  # Read the ZIP file as bytes
+import_result = chronicle.import_playbooks(zip_bytes)
+print(import_result)
+```
+
+Delete playbooks:
+
+```python
+from secops.chronicle.models import APIVersion
+
+playbook_definition = chonicle.get_playbook_full(
+    "123abc12-ab12-12a3-967e-d712bc99d0e1",
+)
+
+# Delete a single playbook definition
+chronicle.delete_playbook(
+    playbook_definition,
+)
+
+# Delete multiple playbooks
+delete_results = chronicle.delete_playbooks(
+    identifiers=[
+       "123abc12-ab12-12a3-967e-d712bc99d0e1",
+       "456def34-cd34-56e7-89ab-e712cd99d0e2"
+    ],
+    api_version=APIVersion.V1ALPHA,
+)
+print(delete_results)
+```
+
+Approval, naming, and enablement helpers:
+
+```python
+from secops.chronicle.models import APIVersion
+
+# Apply a manual approval decision
+approval_result = chronicle.apply_playbook_approval(
+    encrypted_data="encrypted-value",
+    hashed_encrypted_data="hashed-value",
+    is_approved=True,
+)
+
+# Check whether a playbook name is already in use
+name_check = chronicle.check_playbook_name_availability(
+    name="VirusTotal Enrichment",
+)
+
+# List enabled playbooks
+enabled_playbooks = chronicle.list_enabled_playbooks(
+    case_environment="production",
+    as_list=True,
+)
+
+# List enabled playbook names
+enabled_names = chronicle.list_enabled_playbook_names(
+    as_list=True,
+)
+
+# List trigger tags used by playbooks
+trigger_tags = chronicle.list_playbook_trigger_tags(
+    search_term="phishing",
+    requested_page=0,
+    page_size=25,
+    as_list=True,
+)
+```
+
+Templates, permissions, and playbook statistics:
+
+```python
+from secops.chronicle.models import APIVersion
+
+playbook_identifier = "123abc12-ab12-12a3-967e-d712bc99d0e1"
+template_identifier = "template_123456789"
+
+# Fetch playbook execution statistics
+stats = chronicle.get_playbook_stats(
+    playbook_identifier,
+    from_unix_time_ms="1704067200000",
+    to_unix_time_ms="1706745600000",
+)
+
+# Get a single overview template
+overview_template = chronicle.get_overview_template(
+    template_identifier,
+)
+
+# List overview templates for a playbook
+overview_templates = chronicle.get_overview_templates(
+    playbook_identifier,
+    as_list=True,
+)
+
+# List HTML view presets
+html_presets = chronicle.list_html_view_presets(
+    as_list=True,
+)
+
+# Remove custom permissions from a playbook
+chronicle.remove_playbook_permissions(
+    playbook_identifier,
+)
+
+# List available permission options for environments
+permission_options = chronicle.list_playbook_permission_options(
+    environments=["production", "staging"],
+)
+```
+
+Find playbooks related to actions and validate transformer examples:
+
+```python
+from secops.chronicle.models import APIVersion
+
+# Find playbooks that contain a specific action by name
+playbooks_with_action = chronicle.list_playbooks_containing_action(
+    action_name="Send Email",
+    as_list=True,
+)
+
+# Find playbooks involving a specific action ID
+playbooks_by_action_id = chronicle.list_playbooks_involving_actions(
+    action_id="action-123",
+    as_list=True,
+)
+
+# Fetch action widget templates
+widget_templates = chronicle.get_action_widget_template(
+    action_identifiers=["action-123", "action-456"],
+    search_term="email",
+    requested_page=0,
+    page_size=20,
+    as_list=True,
+)
+
+# Validate a transformer expression against sample JSON input
+transformer_result = chronicle.verify_transformer_example(
+    json='{"username": "alice", "severity": "high"}',
+    pipe='{"user": .username, "level": .severity}',
+)
 ```
 
 ## Rule Management

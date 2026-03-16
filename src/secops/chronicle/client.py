@@ -149,6 +149,37 @@ from secops.chronicle.integration.marketplace_integrations import (
     list_marketplace_integrations as _list_marketplace_integrations,
     uninstall_marketplace_integration as _uninstall_marketplace_integration,
 )
+from secops.chronicle.playbook.playbooks import (
+    apply_playbook_approval as _apply_playbook_approval,
+    check_playbook_name_availability as _check_playbook_name_availability,
+    clone_playbook as _clone_playbook,
+    delete_playbook as _delete_playbook,
+    delete_playbooks as _delete_playbooks,
+    duplicate_playbook as _duplicate_playbook,
+    duplicate_playbooks as _duplicate_playbooks,
+    export_playbooks as _export_playbooks,
+    get_action_widget_template as _get_action_widget_template,
+    get_overview_template as _get_overview_template,
+    get_overview_templates as _get_overview_templates,
+    get_playbook as _get_playbook,
+    get_playbook_by_environment as _get_playbook_by_environment,
+    get_playbook_full as _get_playbook_full,
+    get_playbook_full_by_environment as _get_playbook_full_by_environment,
+    get_playbook_stats as _get_playbook_stats,
+    import_playbooks as _import_playbooks,
+    list_enabled_playbook_names as _list_enabled_playbook_names,
+    list_enabled_playbooks as _list_enabled_playbooks,
+    list_html_view_presets as _list_html_view_presets,
+    list_playbook_permission_options as _list_playbook_permission_options,
+    list_playbook_trigger_tags as _list_playbook_trigger_tags,
+    list_playbooks as _list_playbooks,
+    list_playbooks_by_environment as _list_playbooks_by_environment,
+    list_playbooks_containing_action as _list_playbooks_containing_action,
+    list_playbooks_involving_actions as _list_playbooks_involving_actions,
+    remove_playbook_permissions as _remove_playbook_permissions,
+    save_playbook as _save_playbook,
+    verify_transformer_example as _verify_transformer_example,
+)
 from secops.chronicle.integration.integrations import (
     create_integration as _create_integration,
     delete_integration as _delete_integration,
@@ -188,6 +219,7 @@ from secops.chronicle.models import (
     InputInterval,
     IntegrationInstanceParameter,
     IntegrationType,
+    PlaybookType,
     PythonVersion,
     TargetMode,
     TileType,
@@ -5847,3 +5879,730 @@ class ChronicleClient:
             archived=archived,
             run_frequency=run_frequency,
         )
+
+    # ------------------------------------------------------------------ #
+    # Playbook methods
+    # ------------------------------------------------------------------ #
+
+    def export_playbooks(
+        self,
+        playbook_identifiers: list[str],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> bytes:
+        """Export one or more playbook definitions as a ZIP file.
+
+        Args:
+            playbook_identifiers: List of playbook identifiers to export.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Raw bytes of the exported ZIP file.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _export_playbooks(self, playbook_identifiers, api_version)
+
+    def import_playbooks(
+        self,
+        zip_data: bytes,
+        api_version: APIVersion | None = APIVersion.V1ALPHA_UPLOAD,
+    ) -> dict[str, Any]:
+        """Import multiple playbook definitions from a ZIP file.
+
+        Args:
+            zip_data: Raw bytes of the ZIP file containing playbook
+                definitions.
+            api_version: API version to use for the request.
+                Default is V1ALPHA_UPLOAD.
+
+        Returns:
+            Dict containing workflowIdentifiers and mediaInfo.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _import_playbooks(self, zip_data, api_version)
+
+    def list_playbooks(
+        self,
+        playbook_types: list[PlaybookType | str] | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """List playbook definitions filtered by playbook type.
+
+        Args:
+            playbook_types: List of playbook types to filter by.
+                If omitted, defaults to all types: REGULAR and NESTED.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbook definitions
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of playbook definitions.
+            If as_list is False: Dict with payload list of playbook
+                definitions.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbooks(self, playbook_types, api_version, as_list)
+
+    def get_playbook(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get a single playbook definition for the specified identifier.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the playbook definition.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_playbook(self, playbook_identifier, api_version)
+
+    def save_playbook(
+        self,
+        playbook_definition: dict[str, Any],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Save the configuration and step sequence of a playbook.
+
+        Args:
+            playbook_definition: Dict containing the playbook definition
+                to save.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the saved playbook definition.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _save_playbook(self, playbook_definition, api_version)
+
+    def clone_playbook(
+        self,
+        playbook_definition: dict[str, Any],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Create an exact copy of a playbook definition.
+
+        Args:
+            playbook_definition: Dict containing the playbook definition
+                to clone.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the cloned playbook definition.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _clone_playbook(self, playbook_definition, api_version)
+
+    def duplicate_playbook(
+        self,
+        playbook_definition: dict[str, Any],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Create a duplicate of a playbook definition.
+
+        Args:
+            playbook_definition: Dict containing the playbook definition
+                to duplicate.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the duplicated playbook definition.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _duplicate_playbook(self, playbook_definition, api_version)
+
+    def duplicate_playbooks(
+        self,
+        identifiers: list[str],
+        priority: int,
+        category_id: int | None = None,
+        environments: list[str] | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Create duplicates of multiple playbook definitions.
+
+        Args:
+            identifiers: List of playbook identifiers to duplicate.
+            priority: Priority of the duplicated playbooks.
+            category_id: Category to assign the duplicated playbooks to.
+                Optional.
+            environments: List of environments to assign the duplicated
+                playbooks to. Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing a payload list of duplicated playbook
+            definitions.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _duplicate_playbooks(
+            self, identifiers, priority, category_id, environments,
+            api_version,
+        )
+
+    def delete_playbook(
+        self,
+        playbook_definition: dict[str, Any],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> None:
+        """Permanently remove a single playbook definition.
+
+        Args:
+            playbook_definition: Dict containing the playbook definition
+                to delete.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            None
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        _delete_playbook(self, playbook_definition, api_version)
+
+    def delete_playbooks(
+        self,
+        identifiers: list[str],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Delete multiple playbook definitions in a single operation.
+
+        Args:
+            identifiers: List of playbook identifiers to delete.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing a results list of delete results.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _delete_playbooks(self, identifiers, api_version)
+
+    def get_playbook_full(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get the full configuration of a playbook, including its steps
+        and connectivity logic.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the full playbook definition.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_playbook_full(self, playbook_identifier, api_version)
+
+    def get_playbook_full_by_environment(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get the full playbook definition, filtered by the user's
+        accessible environments.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the full playbook definition filtered by
+            the user's accessible environments.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_playbook_full_by_environment(
+            self, playbook_identifier, api_version,
+        )
+
+    def get_playbook_by_environment(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get a playbook definition with metadata adjusted according to
+        the user's environment permissions.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the playbook definition filtered by the
+            user's environment permissions.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_playbook_by_environment(
+            self, playbook_identifier, api_version,
+        )
+
+    def list_playbooks_by_environment(
+        self,
+        playbook_types: list[PlaybookType | str] | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """List playbook definitions filtered by the user's accessible
+        environments.
+
+        Args:
+            playbook_types: List of playbook types to filter by.
+                If omitted, defaults to all types: REGULAR and NESTED.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbook definitions
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of playbook definitions.
+            If as_list is False: Dict with payload list of playbook
+                definitions.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbooks_by_environment(
+            self, playbook_types, api_version, as_list,
+        )
+
+    def apply_playbook_approval(
+        self,
+        encrypted_data: str,
+        hashed_encrypted_data: str,
+        is_approved: bool | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Process an analyst's decision from a manual approval link.
+
+        Args:
+            encrypted_data: The encrypted data from the approval link.
+            hashed_encrypted_data: The hashed encrypted data from the
+                approval link.
+            is_approved: Whether the approval link is approved. Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the approval link result.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _apply_playbook_approval(
+            self, encrypted_data, hashed_encrypted_data, is_approved,
+            api_version,
+        )
+
+    def check_playbook_name_availability(
+        self,
+        name: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Check if a playbook name is already in use.
+
+        Args:
+            name: The playbook name to check.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing a payload field with the identifier of the
+            existing playbook if the name is in use, or empty if
+            available.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _check_playbook_name_availability(self, name, api_version)
+
+    def list_enabled_playbooks(
+        self,
+        case_environment: str | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """List all playbooks that are currently enabled and ready for
+        execution.
+
+        Args:
+            case_environment: Environment to filter enabled playbooks
+                by. Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbook cards instead
+                of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of ApiPlaybookCard instances.
+            If as_list is False: Dict with payload list of
+                ApiPlaybookCard instances.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_enabled_playbooks(
+            self, case_environment, api_version, as_list,
+        )
+
+    def list_enabled_playbook_names(
+        self,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[str]:
+        """List the display names of all currently enabled playbooks.
+
+        Args:
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbook names instead
+                of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of enabled playbook name strings.
+            If as_list is False: Dict with payload list of enabled
+                playbook name strings.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_enabled_playbook_names(self, api_version, as_list)
+
+    def list_playbook_trigger_tags(
+        self,
+        search_term: str | None = None,
+        requested_page: int | None = None,
+        page_size: int | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[str]:
+        """List the tags configured as triggers for playbooks.
+
+        Args:
+            search_term: Search term to filter trigger tags by.
+                Optional.
+            requested_page: Page number to retrieve. Optional.
+            page_size: Number of items per page. Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of trigger tag strings
+                instead of a dict with objectsList and metadata.
+
+        Returns:
+            If as_list is True: List of trigger tag strings.
+            If as_list is False: Dict containing objectsList and
+                metadata.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbook_trigger_tags(
+            self, search_term, requested_page, page_size, api_version,
+            as_list,
+        )
+
+    def get_playbook_stats(
+        self,
+        playbook_identifier: str,
+        from_unix_time_ms: str | None = None,
+        to_unix_time_ms: str | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get operational metrics for a playbook.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve
+                stats for.
+            from_unix_time_ms: Start time in Unix time milliseconds.
+                Optional.
+            to_unix_time_ms: End time in Unix time milliseconds.
+                Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing steps and flows stats maps.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_playbook_stats(
+            self, playbook_identifier, from_unix_time_ms, to_unix_time_ms,
+            api_version,
+        )
+
+    def get_overview_template(
+        self,
+        template_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Get a specific overview template by its identifier.
+
+        Args:
+            template_identifier: Identifier of the overview template
+                to retrieve.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing the overview template data.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_overview_template(
+            self, template_identifier, api_version,
+        )
+
+    def get_overview_templates(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Get the overview templates associated with a specific playbook.
+
+        Args:
+            playbook_identifier: Identifier of the playbook to retrieve
+                overview templates for.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of overview templates
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of overview template instances.
+            If as_list is False: Dict with payload list of overview
+                template instances.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_overview_templates(
+            self, playbook_identifier, api_version, as_list,
+        )
+
+    def list_html_view_presets(
+        self,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """List predefined HTML view presets.
+
+        Args:
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of HTML view presets
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of HtmlViewPreset instances.
+            If as_list is False: Dict with payload list of
+                HtmlViewPreset instances.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_html_view_presets(self, api_version, as_list)
+
+    def remove_playbook_permissions(
+        self,
+        playbook_identifier: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> None:
+        """Remove all access permissions for a playbook.
+
+        Args:
+            playbook_identifier: Original identifier of the playbook
+                to remove permissions for.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            None
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        _remove_playbook_permissions(
+            self, playbook_identifier, api_version,
+        )
+
+    def list_playbook_permission_options(
+        self,
+        environments: list[str],
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """List playbook access permission options for the given
+        environments.
+
+        Args:
+            environments: List of playbook environments to retrieve
+                permission options for.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing userOptions and socRolesOptions lists.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbook_permission_options(
+            self, environments, api_version,
+        )
+
+    def list_playbooks_containing_action(
+        self,
+        action_name: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[str]:
+        """List all playbooks that include the specified action.
+
+        Args:
+            action_name: Name of the action to search for.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbook identifiers
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of playbook identifier strings.
+            If as_list is False: Dict with payload list of playbook
+                identifier strings.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbooks_containing_action(
+            self, action_name, api_version, as_list,
+        )
+
+    def list_playbooks_involving_actions(
+        self,
+        action_id: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """List all playbooks that include the specified action.
+
+        Args:
+            action_id: ID of the action to search for.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of playbooks by
+                environment instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of playbooks by environment.
+            If as_list is False: Dict with payload list of playbooks
+                by environment.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _list_playbooks_involving_actions(
+            self, action_id, api_version, as_list,
+        )
+
+    def get_action_widget_template(
+        self,
+        action_identifiers: list[str] | None = None,
+        search_term: str | None = None,
+        requested_page: int | None = None,
+        page_size: int | None = None,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+        as_list: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Get the action widget template for one or more action
+        identifiers.
+
+        Args:
+            action_identifiers: List of action identifiers to retrieve
+                widget templates for. Optional.
+            search_term: Search term to filter widget templates by.
+                Optional.
+            requested_page: Page number to retrieve. Optional.
+            page_size: Number of items per page. Optional.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+            as_list: If True, return a list of widget templates
+                instead of a dict with a payload list.
+
+        Returns:
+            If as_list is True: List of widget template instances.
+            If as_list is False: Dict with payload list of widget
+                template instances.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _get_action_widget_template(
+            self, action_identifiers, search_term, requested_page,
+            page_size, api_version, as_list,
+        )
+
+    def verify_transformer_example(
+        self,
+        json: str,
+        pipe: str,
+        api_version: APIVersion | None = APIVersion.V1ALPHA,
+    ) -> dict[str, Any]:
+        """Verify the logical evaluation of a transformer using example
+        input data.
+
+        Args:
+            json: The JSON input data to test the transformer against.
+            pipe: The transformer pipe expression to test.
+            api_version: API version to use for the request.
+                Default is V1ALPHA.
+
+        Returns:
+            Dict containing a payload field with the transformation
+            result as a JSON string.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        return _verify_transformer_example(self, json, pipe, api_version)
+

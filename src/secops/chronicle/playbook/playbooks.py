@@ -1068,7 +1068,7 @@ def get_action_widget_template(
     return _extract_list(data, as_list)
 
 
-def test_transformer_example(
+def verify_transformer_example(
     client: "ChronicleClient",
     json: str,
     pipe: str,
