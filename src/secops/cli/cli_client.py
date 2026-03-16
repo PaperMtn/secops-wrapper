@@ -31,6 +31,7 @@ from secops.cli.commands.log_processing import (
 )
 from secops.cli.commands.parser import setup_parser_command
 from secops.cli.commands.parser_extension import setup_parser_extension_command
+from secops.cli.commands.playbook.playbook_client import setup_playbooks_command
 from secops.cli.commands.reference_list import setup_reference_list_command
 from secops.cli.commands.rule import setup_rule_command
 from secops.cli.commands.rule_exclusion import setup_rule_exclusion_command
@@ -193,6 +194,7 @@ def build_parser() -> argparse.ArgumentParser:
     setup_watchlist_command(subparsers)
     setup_rule_retrohunt_command(subparsers)
     setup_integrations_command(subparsers)
+    setup_playbooks_command(subparsers)
 
     return parser
 

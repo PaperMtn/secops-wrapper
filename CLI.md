@@ -1159,6 +1159,210 @@ secops integration instances get-default \
 
 
 
+### Playbook Management
+
+> **Note:** Playbook CLI commands currently support `v1alpha` endpoints.
+
+The playbook commands are grouped under `secops playbook playbooks`.
+
+List playbooks:
+
+```bash
+# List all playbooks
+secops playbook playbooks list
+
+# List only regular playbooks and return a direct list
+secops playbook playbooks list \
+  --playbook-types "REGULAR" \
+  --as-list
+```
+
+Get playbook metadata and definitions:
+
+```bash
+# Get menu-card style metadata
+secops playbook playbooks get \
+  --playbook-identifier "wf_123"
+
+# Get the full playbook definition
+secops playbook playbooks get-full \
+  --playbook-identifier "wf_123"
+
+# Get the full definition filtered by environment access
+secops playbook playbooks get-full-by-environment \
+  --playbook-identifier "wf_123"
+
+# Get playbook metadata filtered by environment access
+secops playbook playbooks get-by-environment \
+  --playbook-identifier "wf_123"
+
+# List playbooks filtered by environment access
+secops playbook playbooks list-by-environment \
+  --playbook-types "REGULAR" "NESTED" \
+  --as-list
+```
+
+Export and import playbooks:
+
+```bash
+# Export one or more playbooks as a ZIP file
+secops playbook playbooks export \
+  --playbook-identifiers "wf_123" "wf_456" \
+  --output-file "/tmp/playbooks-export.zip"
+
+# Import playbooks from a ZIP file
+secops playbook playbooks import \
+  --input-file "/tmp/playbooks-export.zip"
+```
+
+Save, clone, and duplicate playbooks:
+
+```bash
+# Save a playbook definition from a JSON string
+secops playbook playbooks save \
+  --definition '{"identifier":"wf_123","name":"Example Playbook"}'
+
+# Save a playbook definition from a JSON file
+secops playbook playbooks save \
+  --definition "/path/to/playbook-definition.json"
+
+# Clone an existing playbook by first loading its full definition
+secops playbook playbooks clone \
+  --playbook-identifier "wf_123"
+
+# Duplicate using a provided definition
+secops playbook playbooks duplicate \
+  --definition "/path/to/playbook-definition.json"
+
+# Duplicate multiple playbooks in bulk
+secops playbook playbooks duplicate-many \
+  --playbook-identifiers "wf_123" "wf_456" \
+  --priority 1 \
+  --category-id 10 \
+  --environments "production" "staging"
+```
+
+Delete playbooks:
+
+```bash
+# Delete a single playbook
+secops playbook playbooks delete \
+  --playbook-identifier "wf_123"
+
+# Delete multiple playbooks
+secops playbook playbooks delete-many \
+  --playbook-identifiers "wf_123" "wf_456"
+```
+
+Approval, naming, and enablement helpers:
+
+```bash
+# Apply an approval decision from a playbook approval link
+secops playbook playbooks apply-approval \
+  --encrypted-data "encrypted-value" \
+  --hashed-encrypted-data "hashed-value" \
+  --is-approved true
+
+# Check whether a playbook name is available
+secops playbook playbooks check-name \
+  --name "Example Playbook"
+
+# List enabled playbooks
+secops playbook playbooks enabled
+
+# List enabled playbooks for a specific case environment
+secops playbook playbooks enabled \
+  --case-environment "production" \
+  --as-list
+
+# List only the names of enabled playbooks
+secops playbook playbooks enabled-names --as-list
+```
+
+Trigger tags and playbook stats:
+
+```bash
+# List playbook trigger tags
+secops playbook playbooks trigger-tags
+
+# Search trigger tags and return a direct list
+secops playbook playbooks trigger-tags \
+  --search-term "malware" \
+  --requested-page 1 \
+  --page-size 25 \
+  --as-list
+
+# Get playbook stats
+secops playbook playbooks stats \
+  --playbook-identifier "wf_123" \
+  --from-unix-time-ms "1710000000000" \
+  --to-unix-time-ms "1710086400000"
+```
+
+Overview templates and HTML presets:
+
+```bash
+# Get a specific overview template
+secops playbook playbooks overview-template \
+  --template-identifier "template_123"
+
+# List overview templates for a playbook
+secops playbook playbooks overview-templates \
+  --playbook-identifier "wf_123" \
+  --as-list
+
+# List HTML view presets
+secops playbook playbooks html-view-presets --as-list
+```
+
+Permissions helpers:
+
+```bash
+# Remove explicit permissions from a playbook
+secops playbook playbooks remove-permissions \
+  --playbook-identifier "wf_123"
+
+# List permission options for environments
+secops playbook playbooks permission-options \
+  --environments "production" "staging"
+```
+
+Action usage and widget helpers:
+
+```bash
+# List playbooks containing a specific action name
+secops playbook playbooks list-containing-action \
+  --action-name "Ping" \
+  --as-list
+
+# List playbooks involving a specific action ID
+secops playbook playbooks list-involving-actions \
+  --action-id "action_123" \
+  --as-list
+
+# Get action widget templates
+secops playbook playbooks action-widget-template \
+  --action-identifiers "action_123" "action_456" \
+  --search-term "enrich" \
+  --requested-page 1 \
+  --page-size 10 \
+  --as-list
+```
+
+Verify a transformer example:
+
+```bash
+# Verify using inline JSON and pipe content
+secops playbook playbooks verify-transformer \
+  --json-input '{"event":{"id":"123"}}' \
+  --pipe 'event.id'
+
+# Verify using file paths for both inputs
+secops playbook playbooks verify-transformer \
+  --json-input "/path/to/example-input.json" \
+  --pipe "/path/to/transformer.pipe"
+```
+
 ### Rule Management
 
 List detection rules:
