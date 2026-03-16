@@ -611,6 +611,14 @@ class IntegrationInstanceParameter:
         return data
 
 
+class PlaybookType(StrEnum):
+    """Playbook types for filtering workflow menu cards."""
+
+    UNSPECIFIED = "PLAYBOOK_TYPE_UNSPECIFIED"
+    REGULAR = "REGULAR"
+    NESTED = "NESTED"
+
+
 class ConnectorConnectivityStatus(str, Enum):
     """Connectivity status for Chronicle SOAR connector instances."""
 
